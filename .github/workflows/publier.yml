@@ -1,0 +1,66 @@
+name: Publier une nouvelle version
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'depot-github-dayan3d/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+defaults:
+  run:
+    working-directory: depot-github-dayan3d
+
+jobs:
+  publier:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: depot-github-dayan3d/package-lock.json
+
+      - name: Lire le numéro de version
+        id: v
+        shell: bash
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Vérifier si cette version existe déjà
+        id: deja
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "v${{ steps.v.outputs.version }}" >/dev/null 2>&1; then
+            echo "existe=oui" >> "$GITHUB_OUTPUT"
+            echo "Version déjà publiée : rien à faire."
+          else
+            echo "existe=non" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Installer les dépendances
+        if: steps.deja.outputs.existe == 'non'
+        run: npm ci
+
+      - name: Fabriquer l'installateur Windows
+        if: steps.deja.outputs.existe == 'non'
+        run: npx electron-builder --win nsis --x64 --publish never
+
+      - name: Publier la version
+        if: steps.deja.outputs.existe == 'non'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          V="${{ steps.v.outputs.version }}"
+          gh release create "v$V" \
+            "dist/Dayan3D-Facturation-Setup-$V.exe" \
+            "dist/Dayan3D-Facturation-Setup-$V.exe.blockmap" \
+            "dist/latest.yml" \
+            --title "Version $V" --notes "Version $V" --latest
