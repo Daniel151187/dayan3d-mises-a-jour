@@ -1,0 +1,63 @@
+{
+  "name": "dayan3d-facturation",
+  "version": "2.2.0",
+  "description": "Facturation Dayan 3D",
+  "main": "main.js",
+  "author": "Dayan 3D",
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win nsis"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.0",
+    "electron-updater": "^6.8.9",
+    "nodemailer": "^6.10.1",
+    "qrcode-generator": "^2.0.4"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.0.0"
+  },
+  "build": {
+    "appId": "ch.dayan3d.facturation",
+    "productName": "Dayan 3D Facturation",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "assets/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/logo.png",
+      "signAndEditExecutable": false,
+      "artifactName": "Dayan3D-Facturation-Setup-${version}.exe"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "perMachine": false,
+      "language": "1036",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Dayan 3D Facturation"
+    },
+    "publish": [
+      {
+        "provider": "generic",
+        "url": "https://updates.invalid/dayan3d"
+      }
+    ]
+  }
+}
